@@ -10,6 +10,7 @@
   "license": "ISC",
   "devDependencies": {
     "css-loader": "^4.2.2",
+    "html-webpack-plugin": "^4.4.1",
     "jquery": "^1.11.3",
     "less": "^3.12.2",
     "less-loader": "^7.0.1",
