@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
     // 编译入口
-    entry: "./src/js/index.js",
+    entry: ["./src/js/index.js", "./src/index.html"],
     // 出口
     output: {
         filename: "js/build.js",
@@ -67,5 +67,7 @@ module.exports = {
         compress: true,
         port: 3000,
         open: true,
+        //开启HMR功能,重启webpack服务
+        hot: true,
     },
 };
