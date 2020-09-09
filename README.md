@@ -868,3 +868,29 @@ if (module.hot) {
 -   解决：将 html 文件增加到入口处
     -   entry: ["./src/js/index.js", "./src/index.html"]
 -   html 文件不需要 HMR 功能
+
+## source-map
+
+-   一种提供源代码到构建后代码映射的技术
+-   如果构建后代码出错了，将错误直接指向源代码处的错误，直接更改源代码
+
+-   [inline-|hidden-|eval-][nosource-][cheap-[module-]]source-map
+    -   inline-source-map:内联，只生成一个内联的 source-map
+    -   hidden-source-map:外部,提供错误代码错误原因，不能提供源码的错误位置
+    -   eval-source-map:内联，每一个文件都生成对应的 source-map;提示错误代码的准确信息和错误位置
+    -   nosource-source-map：外部;提示错误代码的准确信息,没有源代码信息
+    -   cheap-source-map:外部；提示错误代码的准确信息和错误行的位置
+    -   cheap-module-source-map:外部；提示错误代码的准确信息和错误位置
+    -   source-map:外部；示错误代码的准确信息和错误位置
+-   内联和外部的区别
+    -   外部生产的文件，内联没有
+    -   内联构建速度更快
+-   开发环境：速度快，调试更友好
+    -   速度快（eval>inline>cheap>...）
+    -   调试友好：cheap-module-source-map
+    -   推荐 eval-source-map/eval-cheap-module-source-map
+-   生产环境：源码要不要隐藏，调试要不要更友好
+    -   内联会让代码体积非常大，不采用
+    -   nosource-source-map 全部隐藏
+    -   hidden-source-map 只隐藏源代码；会提示构建后代码错误信息
+    -   推荐 source-map/cheap-module-source-map
