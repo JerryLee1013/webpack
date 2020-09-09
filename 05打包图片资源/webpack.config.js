@@ -10,7 +10,7 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /.\less$/,
+                test: /\.less$/,
                 // 使用多个loader处理用use
                 use: ["style-loader", "css-loader", "less-loader"],
             },
