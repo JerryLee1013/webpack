@@ -319,3 +319,272 @@ module.exports = {
     },
 };
 ```
+
+### 开发环境配置
+
+```javascript
+const { resolve } = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+
+module.exports = {
+    // 编译入口
+    entry: "./src/js/index.js",
+    // 出口
+    output: {
+        filename: "js/build.js",
+        path: resolve(__dirname, "build"),
+    },
+
+    // loader
+    module: {
+        rules: [
+            // 编译css文件
+            {
+                test: /\.css$/,
+                use: ["style-loader", "css-loader"],
+            },
+            // 编译less文件
+            {
+                test: /\.less$/,
+                use: ["style-loader", "css-loader", "less-loader"],
+            },
+            // 编译picture文件
+            {
+                test: /\.(jpg|png|gif)$/,
+                loader: "url-loader",
+                options: {
+                    limit: 8 * 1024,
+                    name: "[hash:10].[ext]",
+                    outputPath: "imgs",
+                },
+            },
+            // 编译html中的img
+            {
+                test: /\.html$/,
+                loader: "html-loader",
+            },
+            // 打包其他资源
+            {
+                exclude: /\.(html|css|js|less|jpg|png|gif)$/,
+                loader: "file-loader",
+                options: {
+                    name: "[hash:10].[ext]",
+                    outputPath: "media",
+                },
+            },
+        ],
+    },
+
+    // 插件
+    plugins: [
+        new HtmlWebpackPlugin({
+            // 复制html模板
+            template: "./src/index.html",
+        }),
+    ],
+
+    // 模式
+    mode: "development",
+
+    // 开发服务器
+    devServer: {
+        contentBase: resolve(__dirname, "build"),
+        compress: true,
+        port: 3000,
+        open: true,
+    },
+};
+```
+
+## 生产环境配置
+
+### 提取 css 成单独文件/css 兼容处理
+
+1.  下载插件
+
+    ```
+    cnpm i mini-css-extract-plugin -D
+    ```
+
+2.  代码
+
+```
+const { resolve } = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
+module.exports = {
+    // 编译入口
+    entry: "./src/js/index.js",
+    // 出口
+    output: {
+        filename: "js/build.js",
+        path: resolve(__dirname, "build"),
+    },
+
+    // loader
+    module: {
+        rules: [
+            // 编译css文件
+            {
+                test: /\.css$/,
+                use: [
+                    // "style-loader",
+                    // 取代tyle-loader,作用：提取js中的css成单独文件
+                    MiniCssExtractPlugin.loader,
+                    "css-loader",
+                ],
+            },
+            // 编译less文件
+            {
+                test: /\.less$/,
+                use: ["style-loader", "css-loader", "less-loader"],
+            },
+            // 编译picture文件
+            {
+                test: /\.(jpg|png|gif)$/,
+                loader: "url-loader",
+                options: {
+                    limit: 8 * 1024,
+                    name: "[hash:10].[ext]",
+                    outputPath: "imgs",
+                },
+            },
+            // 编译html中的img
+            {
+                test: /\.html$/,
+                loader: "html-loader",
+            },
+            // 打包其他资源
+            {
+                exclude: /\.(html|css|js|less|jpg|png|gif)$/,
+                loader: "file-loader",
+                options: {
+                    name: "[hash:10].[ext]",
+                    outputPath: "media",
+                },
+            },
+        ],
+    },
+
+    // 插件
+    plugins: [
+        new HtmlWebpackPlugin({
+            // 复制html模板
+            template: "./src/index.html",
+        }),
+        new MiniCssExtractPlugin({
+            // 对输出的css文件重命名
+            filename: "css/build.css",
+        }),
+    ],
+
+    // 模式
+    mode: "development",
+
+    // 开发服务器
+    devServer: {
+        contentBase: resolve(__dirname, "build"),
+        compress: true,
+        port: 3000,
+        open: true,
+    },
+};
+```
+
+3.  css 兼容性处理
+
+```
+cnpm i postcss-loader precss autoprefixer -D
+```
+
+-   在 package.json 中加如浏览器版本限制代码,如下:
+
+```json
+"browserslist": {
+    //开发环境:设置 nidejs 中的环境变量,通过 process.env.NODE_ENV = development
+    "development": [
+        "last 1 chrome version",
+        "last 1 firefox version",
+        "last 1 safari version"
+    ],
+    //生产环境:默认是生产环境
+    "production": [
+        ">0.2%",
+        "not dead",
+        "not op_mini all"
+    ]
+}
+```
+
+-   创建 webpack.config.js
+
+```javascript
+const { resolve } = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
+// 设置nodejs环境变量
+process.env.NODE_ENV = "development";
+
+module.exports = {
+    // 编译入口
+    entry: "./src/js/index.js",
+    // 出口
+    output: {
+        filename: "js/build.js",
+        path: resolve(__dirname, "build"),
+    },
+
+    // loader
+    module: {
+        rules: [
+            // 编译css文件
+            {
+                test: /\.css$/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    "css-loader",
+                    // 使用loader的默认配置
+                    // "postcss-loader",
+                    // 修改loader的配置
+                    {
+                        loader: "postcss-loader",
+                    },
+                ],
+            },
+        ],
+    },
+
+    // 插件
+    plugins: [
+        new HtmlWebpackPlugin({
+            // 复制html模板
+            template: "./src/index.html",
+        }),
+        new MiniCssExtractPlugin({
+            // 对输出的css文件重命名
+            filename: "css/build.css",
+        }),
+    ],
+
+    // 模式
+    mode: "development",
+
+    // 开发服务器
+    devServer: {
+        contentBase: resolve(__dirname, "build"),
+        compress: true,
+        port: 3000,
+        open: true,
+    },
+};
+```
+
+-   创建 postcss.config.js
+
+```javascript
+module.exports = {
+    plugins: [require("precss"), require("autoprefixer")],
+};
+```
