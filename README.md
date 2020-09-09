@@ -662,3 +662,11 @@ module.exports = {
     },
 };
 ```
+
+## js 语法检查
+
+1.  下载模块
+
+```
+cnpm i eslint-loader eslint-config-airbnb-base eslint-plugin-import eslint -D
+```
