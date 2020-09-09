@@ -663,10 +663,53 @@ module.exports = {
 };
 ```
 
-## js 语法检查
+## js 语法检查/兼容性处理/压缩 html/js
 
-1.  下载模块
+1. 下载
 
 ```
-cnpm i eslint-loader eslint-config-airbnb-base eslint-plugin-import eslint -D
+npm i eslint eslint-loader eslint-config-airbnb-base eslint-plugin-import -D
+```
+
+2. 使用
+   按需兼容处理 --> core-js
+   下载
+   npm i core-js -D
+
+使用 webpack.config.js:
+
+```javascript
+module.exports = {
+    module: {
+        rules: [
+            {
+              test: /\.js$/,
+              exclude: /node_modules/,
+              loader: 'babel-loader',
+              options: {
+                presets: [
+                  [
+                    '@babel/preset-env',
+                    {
+                      // 按需加载
+                      useBuiltIns: 'usage',
+                      // 指定core-js版本
+                      corejs: {
+                        version: 3,
+                      },
+                      // 指定兼容到浏览器的哪个版本
+                      targets: {
+                        chrome: '60',
+                        firefox: '60',
+                        ie: '9',
+                        safari: '10',
+                        edge: '17',
+                      },
+                    },
+                  ],
+                ],
+              },
+        ],
+    },
+}
 ```
