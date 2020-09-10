@@ -894,3 +894,16 @@ if (module.hot) {
     -   nosource-source-map 全部隐藏
     -   hidden-source-map 只隐藏源代码；会提示构建后代码错误信息
     -   推荐 source-map/cheap-module-source-map
+
+## 缓存
+
+-   babel 缓存
+    -   catchDirectory:true
+    -   让第二次打包构建速度更快
+-   文件资源缓存
+    -   hash:每次 webpack 构建时会生成一个新的 hash 值，添加到文件名
+    -   问题：当因为 js 和 css 同时用一个 hash 值，如果重新打包会导致所有缓存失效，可能只改动一个文件，但是其他所有文件都失效
+    -   chunkhash：根据 chunk 生成的 hash 值，如果打包来源于同一个 chunk 那么 hash 值就一样
+    -   问题：因为 css 是在 js 中被引入的，所以同属于一个 chunk
+    -   contenthash：根据文件的内容生成 hash 值，不同文件 hash 值一定不一样
+    -   让代码上线运行缓存更好使用
