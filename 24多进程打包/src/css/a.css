@@ -1,0 +1,7 @@
+#box1 {
+    width: 200px;
+    height: 300px;
+    background-color: deeppink;
+    display: flex;
+    backface-visibility: hidden;
+}

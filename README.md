@@ -907,3 +907,180 @@ if (module.hot) {
     -   问题：因为 css 是在 js 中被引入的，所以同属于一个 chunk
     -   contenthash：根据文件的内容生成 hash 值，不同文件 hash 值一定不一样
     -   让代码上线运行缓存更好使用
+
+## tree-shaking 去除无用代码
+
+-   前提
+    -   必须使用 ES6 模块化
+    -   开启 production 环境
+-   作用：减少代码体积
+-   在 package 中配置"sideEffects": false；所有代码都没有副作用（都可以进行 tree-shaking），可能会把 css/@babel/polyfill 文件干掉
+-   如下这样配置就不会误删除
+
+```
+    "sideEffects": [
+        "*.css",
+        "*.less"
+    ]
+```
+
+## 懒加载/预加载
+
+```javascript
+console.log("index.js文件被加载");
+// import { mul } from "./test";
+
+document.getElementById("btn").onclick = function () {
+    // 懒加载
+    // 预加载：webpackPrefetch: true;会在使用之前提前加载js文件
+    // 正常加载可以认为是并行加载，同一时间加载多个文件
+    // 预加载webpackPrefetch，等其他资源加载完毕，浏览器空闲了，再偷偷加载，再移动端有很大兼容性问题
+    // 懒加载等用的时候才加载
+    import(/* webpackChunkName:"test",webpackPrefetch:true */ "./test")
+        .then(({ mul, count }) => {
+            console.log(mul(3, 9));
+        })
+        .catch(() => {
+            console.log("文件加载失败");
+        });
+};
+```
+
+## PWA,渐进式网络开发应用程序
+
+-   离线可以访问
+-   插件 workbox-webpack-plugin
+-   webpack.config.js 文件配置
+
+```javascript
+    plugins: [
+        new WorkboxWebpackPlugin.GenerateSW({
+            clientsClaim: true, //帮助serviceworker快速启动
+            skipWaiting: true, //删除旧的serviceworker
+        }),
+    ],
+```
+
+-   index.js 配置
+
+```javascript
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker
+            .register("/service-worker.js")
+            .then((registration) => {
+                console.log("SW registered: ", registration);
+            })
+            .catch((registrationError) => {
+                console.log("SW registration failed: ", registrationError);
+            });
+    });
+}
+```
+
+## 多进程配置
+
+-   cnpm 下载 thread-loader
+-   将 thread-loader 放到其他需要多进程打包来提升速度的 loader 中
+
+```javascript
+{
+  test: /\.js$/,
+  exclude: /node_modules/,
+  use: [
+      // 开启多进程打包，进程开启是有时间的600ms，进程通信也要花时间
+      // 只有工作消耗时间较长，才需要多进程打包
+      {
+          loader: "thread-loader",
+          options: {
+              works: 2, //2进程，消耗进程数提高打包速度
+          },
+      },
+      {
+          loader: "babel-loader",
+          options: {
+              presets: [
+                  [
+                      "@babel/preset-env",
+                      {
+                          useBuiltIns: "usage",
+                          corejs: { version: 3 },
+                          targets: {
+                              chrome: "60",
+                              firefox: "50",
+                          },
+                      },
+                  ],
+              ],
+              // 开启babel缓存
+              // 第二次构建时，会读取之前的缓存
+              cacheDirectory: true,
+          },
+      },
+  ],
+}
+```
+
+## externals
+
+-   作用：防止将一些包打包输出到 bundle 中
+
+```
+    externals: {
+        // 忽略库,拒绝jQuery被打包
+        jquery: "jQuery",
+    },
+```
+
+## dll 动态链接库
+
+-   指示 webpack 哪些库不参与打包，会对某些库单独打包
+-   cnpm i add-asset-html-webpack-plugin -D
+-   创建 webpack.dll.js
+
+```javascript
+const { resolve } = require("path");
+const webpack = require("webpack");
+
+// 使用dll技术对默写库进行单独打包
+// 当运行webpack时，默认查找webpack.config.js文件
+// 需要运行webpack.dll.js  --> 运行指令：webpack --config webpack.dll.js
+module.exports = {
+    entry: {
+        // 最终打包生成的name-->jquery
+        // ["jquery"]--------->要打包的库是jquery
+        jquery: ["jquery"],
+    },
+    output: {
+        filename: "[name].js",
+        path: resolve(__dirname, "dll"),
+        library: "[name]_[hash:10]", //打包的库里面向外暴露出去的内容叫什么名字
+    },
+    plugins: [
+        // 打包生成mainfest.json-->提供和jquery的映射
+        new webpack.DllPlugin({
+            name: "[name]_[hash:10]", //映射库的暴露的内容
+            path: resolve(__dirname, "dll/mainfest.json"), //输出文件路径
+        }),
+    ],
+    mode: "production",
+};
+```
+
+-   配置 webpack.config.js
+
+```javascript
+    plugins: [
+        new HtmlWebpackPlugin({
+            template: "./src/index.html",
+        }),
+        // 告诉webpack哪些库不参与打包，同时使用时的名称也得改
+        new webpack.DllReferencePlugin({
+            manifest: resolve(__dirname, "dll/mainfest.json"),
+        }),
+        // 将某个文件打包输出去，并在html中自动引入该文件
+        new AddAssetHtmlWebpackPlugin({
+            filepath: resolve(__dirname, "dll/jquery.js"),
+        }),
+    ],
+```
