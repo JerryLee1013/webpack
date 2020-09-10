@@ -1084,3 +1084,66 @@ module.exports = {
         }),
     ],
 ```
+
+## webpack 配置详情
+
+### entry 入口
+
+1.  string
+
+-   打包形成一个 chunk，输出一个 bundle
+-   输出的 bundle 默认是 main.js
+
+2.  array
+
+-   entry: ["./src/js/index.js", "./src/js/add.js"],
+-   多入口
+-   所有入口文件最终只会形成一个 chunk，输出也只有一个 bundle 文件
+-   只有一个用途；只有在 HMR 功能中让 html 功能生效
+
+3.  object
+
+-   entry: { index: "./src/js/index.js", add: "./src/js/add.js" },
+-   多入口
+-   有几个入口文件，就生成几个 chunk 和 bundle 文件
+-   文件名为属性名 index/add
+-   第三种常用
+
+4.  特殊用法
+
+-   代码
+
+```javascript
+    entry: {
+        index: ["./src/js/index.js", ".src/js/count.js"],
+        add: "./src/js/add.js",
+    },
+```
+
+-   其中 index 和 array 的用法类似，两个源文件打包在一起，生成一个 chunk 各 bundle
+-   然后再按照 objec 的打包方式进行打包
+
+### output
+
+-   代码
+
+```javascript
+    output: {
+        //指定文件名称+目录
+        filename: "js/[name].js",
+        // 指定目录
+        path: resolve(__dirname, "build"),
+        // 所有资源引入公共路径前缀;一般用于生产环境
+        publicPath: "/",
+        //非入口chunk的文件名称
+        chunkFilename: "js/[name]_chunk.js",
+        // 整个库向外暴漏的变量名
+        library: "[name]",
+        // 将变量名添加在指定对象下,一般结合dll使用
+        // libraryTarget: "window", //添加到window对象下
+        // libraryTarget: "global",//添加到global对象下
+        // libraryTarget: "commonjs", //添加到commonjs对象下
+    },
+```
+
+### module
